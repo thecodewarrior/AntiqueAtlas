@@ -5,8 +5,10 @@ import java.util.List;
 
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
+
 import hunternif.mc.atlas.AntiqueAtlasMod;
 import hunternif.mc.atlas.api.impl.MarkerApiImpl;
+import hunternif.mc.atlas.api.impl.PathApiImpl;
 import hunternif.mc.atlas.api.impl.TileApiImpl;
 
 /**
@@ -17,6 +19,7 @@ public class AtlasAPI {
 	private static final int VERSION = 3;
 	public static final TileAPI tiles = new TileApiImpl();
 	public static final MarkerAPI markers = new MarkerApiImpl();
+	public static final PathAPI paths = new PathApiImpl();
 	
 	/** Version of the API, meaning only this particular class. You might
 	 * want to check static field VERSION in the specific API interfaces. */
@@ -32,6 +35,11 @@ public class AtlasAPI {
 	/** API for custom markers. */
 	public static MarkerAPI getMarkerAPI() {
 		return markers;
+	}
+	
+	/** API for custom paths. */
+	public static PathAPI getPathAPI() {
+		return paths;
 	}
 	
 	/** Convenience method that returns a list of atlas IDs for all atlas items

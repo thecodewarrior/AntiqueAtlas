@@ -18,6 +18,7 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
+import net.minecraft.util.math.Vec3i;
 
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
@@ -141,6 +142,30 @@ public class GuiAtlas extends GuiComponent {
 		}
 	};
 	
+	private final IState PLACING_PATHS = new IState() {
+		@Override
+		public void onEnterState() {
+			lastPathPos = null;
+			btnPath.setSelected(true);
+		};
+		@Override
+		public void onExitState() {
+			lastPathPos = null;
+			btnPath.setSelected(false);
+		};
+	};
+	
+	private final IState DELETING_PATHS = new IState() {
+		@Override
+		public void onEnterState() {
+			btnDelPath.setSelected(true);
+		};
+		@Override
+		public void onExitState() {
+			btnDelPath.setSelected(false);
+		};
+	};
+	
 	// Buttons =================================================================
 	
 	/** Arrow buttons for navigating the map view via mouse clicks. */
@@ -161,6 +186,11 @@ public class GuiAtlas extends GuiComponent {
 	/** Button for restoring player's position at the center of the Atlas. */
 	private final GuiPositionButton btnPosition;
 	
+	/** Button for placing a path */
+	private final GuiBookmarkButton btnPath;
+	
+	/** Button for deleting paths. */
+	private final GuiBookmarkButton btnDelPath;
 	
 	// Navigation ==============================================================
 	
@@ -219,6 +249,13 @@ public class GuiAtlas extends GuiComponent {
 	/** Displayed where the marker is about to be placed when the Finalizer GUI is on. */
 	private GuiBlinkingMarker blinkingIcon = new GuiBlinkingMarker();
 	
+	// Paths ===================================================================
+	
+	/** Local paths in the current dimension */
+	private DimensionPathsData localPathsData;
+	
+	/** The position the player is creating a path from */
+	private Vec3i lastPathPos;
 	
 	// Misc stuff ==============================================================
 	
@@ -231,9 +268,6 @@ public class GuiAtlas extends GuiComponent {
 	
 	/** Progress bar for exporting images. */
 	private ProgressBarOverlay progressBar = new ProgressBarOverlay(100, 2);
-	
-	/** Local paths in the current dimension */
-	private DimensionPathsData localPathsData;
 	
 	private int scaleAlpha = 255;
 	private long lastUpdateMillis = System.currentTimeMillis();
@@ -348,6 +382,39 @@ public class GuiAtlas extends GuiComponent {
 			}
 		});
 		
+		btnPath = new GuiBookmarkButton(0, Textures.ICON_ADD_PATH, I18n.format("gui.antiqueatlas.addPath"));
+		addChild(btnPath).offsetGuiCoords(300, 94);
+		btnPath.addListener(new IButtonListener() {
+			@Override
+			public void onClick(GuiComponentButton button) {
+				if (stack != null) {
+					if (state.is(PLACING_PATHS)) {
+						selectedButton = null;
+						state.switchTo(NORMAL);
+					} else {
+						selectedButton = button;
+						state.switchTo(PLACING_PATHS);
+					}
+				}
+			}
+		});
+		btnDelPath = new GuiBookmarkButton(2, Textures.ICON_DELETE_PATH, I18n.format("gui.antiqueatlas.delPath"));
+		addChild(btnDelPath).offsetGuiCoords(300, 113);
+		btnDelPath.addListener(new IButtonListener() {
+			@Override
+			public void onClick(GuiComponentButton button) {
+				if (stack != null) {
+					if (state.is(DELETING_PATHS)) {
+						selectedButton = null;
+						state.switchTo(NORMAL);
+					} else {
+						selectedButton = button;
+						state.switchTo(DELETING_PATHS);
+					}
+				}
+			}
+		});
+		
 		addChild(scaleBar).offsetGuiCoords(20, 198);
 		scaleBar.setMapScale(1);
 		
@@ -386,6 +453,7 @@ public class GuiAtlas extends GuiComponent {
 	@Override
 	protected void mouseClicked(int mouseX, int mouseY, int mouseState) throws IOException {
 		super.mouseClicked(mouseX, mouseY, mouseState);
+		Log.info("button %d", mouseState);
 		if (state.is(EXPORTING_IMAGE)) {
 			return; // Don't remove the progress bar.
 		}
@@ -395,6 +463,7 @@ public class GuiAtlas extends GuiComponent {
 		int mapY = (height - MAP_HEIGHT)/2;
 		boolean isMouseOverMap = mouseX >= mapX && mouseX <= mapX + MAP_WIDTH &&
 				mouseY >= mapY && mouseY <= mapY + MAP_HEIGHT;
+		boolean canDrag = true, goToNormal = false;
 		if (!state.is(NORMAL) && !state.is(HIDING_MARKERS)) {
 			if (state.is(PLACING_MARKER) // If clicked on the map, place marker:
 					&& isMouseOverMap && mouseState == 0 /* left click */) {
@@ -420,14 +489,42 @@ public class GuiAtlas extends GuiComponent {
 				AtlasAPI.markers.deleteMarker(player.worldObj,
 						stack.getItemDamage(), toDelete.getId());
 			}
-			state.switchTo(NORMAL);
-		} else if (isMouseOverMap && selectedButton == null) {
+			goToNormal = true;
+			canDrag = false;
+		}
+		
+		if( state.is(PLACING_PATHS) && isMouseOverMap) {
+			canDrag = false;
+			goToNormal = mouseState == 1; // Right click
+			
+			if(mouseState == 0) {
+				int worldX = screenXToWorldX(mouseX);
+				int worldZ = screenYToWorldZ(mouseY);
+				
+				if(lastPathPos != null) {
+					AtlasAPI.paths.putPath(player.worldObj, stack.getItemDamage(), PathTypes.DOTS, "", lastPathPos.getX(), lastPathPos.getY(), worldX, worldZ);
+				}
+				lastPathPos = new Vec3i(worldX, worldZ, 0);
+			}
+		} else if( state.is(DELETING_PATHS) && isMouseOverMap) {
+			canDrag = false;
+			goToNormal = mouseState == 1; // Right click
+			
+			if(mouseState == 0) {
+				
+			}
+		}
+		
+		if (canDrag && isMouseOverMap && selectedButton == null) {
 			isDragging = true;
 			dragMouseX = mouseX;
 			dragMouseY = mouseY;
 			dragMapOffsetX = mapOffsetX;
 			dragMapOffsetY = mapOffsetY;
 		}
+		
+		if(goToNormal)
+			state.switchTo(NORMAL);
 	}
 	
 	/** Opens a dialog window to select which file to save to, then performs
@@ -683,15 +780,31 @@ public class GuiAtlas extends GuiComponent {
 		int markersEndZ = MathUtil.roundToBase(mapEndZ, MarkersData.CHUNK_STEP) / MarkersData.CHUNK_STEP + 1;
 		double iconScale = getIconScale();
 		
-		Rectangle mapRect = new Rectangle(mapStartX, mapStartZ, mapEndX, mapEndZ);
+		Rectangle mapRect = new Rectangle(
+				screenXToWorldX(mapStartScreenX), screenYToWorldZ(mapStartScreenY),
+				mapEndX*16-screenXToWorldX(mapStartScreenX), mapEndZ*16-screenYToWorldZ(mapStartScreenY));
+		Rectangle checkRect = new Rectangle();
 		
-		for (Path path : localPathsData.getAllPaths()) {			
-			if(mapRect.intersects(new Rectangle(path.getMinX(), path.getMinZ(), path.getMaxX(), path.getMaxZ()))) {
+		GlStateManager.color(1, 1, 1, 1);
+		for (Path path : localPathsData.getAllPaths()) {
+			checkRect.setBounds(path.getMinX(), path.getMinZ(), path.getMaxX()-path.getMinX(), path.getMaxZ()-path.getMinZ());
+			if(mapRect.intersects(checkRect)) {
 				renderPath(path);
 			}
 		}
 		
-		renderPath(new Path(1000, PathTypes.DOTS, "ASDF", 0, new int[] { 0, 10, 12, -30 }, new int[] { 0, 10, 23, 32 }));
+		GlStateManager.color(1, 1, 1, 0.5f);
+		for (Path path : localPathsData.getAllTempPaths()) {
+			checkRect.setBounds(path.getMinX(), path.getMinZ(), path.getMaxX()-path.getMinX(), path.getMaxZ()-path.getMinZ());
+			if(mapRect.intersects(checkRect)) {
+				renderPath(path);
+			}
+		}
+		GlStateManager.color(1, 1, 1, 1);
+		
+		renderPath(new Path(1000, PathTypes.DOTS, "ASDF", 0, 0, 0, 10, 10));
+		GlStateManager.color(1, 1, 1, 0.5f);
+		renderPath(new Path(1000, PathTypes.DOTS, "ASDF", 0, 10, 10, 20, 20));
 		
 		// Draw global markers:
 		for (int x = markersStartX; x <= markersEndX; x++) {
@@ -778,28 +891,23 @@ public class GuiAtlas extends GuiComponent {
 		GlStateManager.glLineWidth((int)( 4*mapScale ));
 		Minecraft.getMinecraft().renderEngine.bindTexture(path.getType().getTexture());
 		vb.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX);
+		
+		Vec3d p1 = new Vec3d(worldXToScreenX(path.getX1()), worldZToScreenY(path.getZ1()), 0);
+		Vec3d p2 = new Vec3d(worldXToScreenX(path.getX2()), worldZToScreenY(path.getZ2()), 0);
+		
+		Vec3d dir = p2.subtract(p1);
+		Vec3d perp = new Vec3d(dir.yCoord, -dir.xCoord, dir.zCoord).normalize().scale(1);
+		
 		double u = 0;
-		for (int i = 0; i+1 < path.getLength(); i ++) {
-			int wX = path.getXs()[i], wZ = path.getZs()[i];
-			int wX2 = path.getXs()[i+1], wZ2 = path.getZs()[i+1];
-			
-			Vec3d p1 = new Vec3d(worldXToScreenX(wX), worldZToScreenY(wZ), 0);
-			Vec3d p2 = new Vec3d(worldXToScreenX(wX2), worldZToScreenY(wZ2), 0);
-			
-			Vec3d dir = p2.subtract(p1);
-			Vec3d perp = new Vec3d(dir.yCoord, -dir.xCoord, dir.zCoord).normalize().scale(1);
-			
-			
-			
-			vb.pos(p1.xCoord+perp.xCoord, p1.yCoord+perp.yCoord, 0).tex(u, 0).endVertex();
-			vb.pos(p1.xCoord-perp.xCoord, p1.yCoord-perp.yCoord, 0).tex(u, 1).endVertex();
-			
-			double distance = dir.lengthVector();
-			u += distance * 0.1;
-			
-			vb.pos(p2.xCoord-perp.xCoord, p2.yCoord-perp.yCoord, 0).tex(u, 1).endVertex();
-			vb.pos(p2.xCoord+perp.xCoord, p2.yCoord+perp.yCoord, 0).tex(u, 0).endVertex();
-		}
+		
+		vb.pos(p1.xCoord+perp.xCoord, p1.yCoord+perp.yCoord, 0).tex(u, 0).endVertex();
+		vb.pos(p1.xCoord-perp.xCoord, p1.yCoord-perp.yCoord, 0).tex(u, 1).endVertex();
+		
+		double distance = dir.lengthVector();
+		u += distance * 0.1;
+		
+		vb.pos(p2.xCoord-perp.xCoord, p2.yCoord-perp.yCoord, 0).tex(u, 1).endVertex();
+		vb.pos(p2.xCoord+perp.xCoord, p2.yCoord+perp.yCoord, 0).tex(u, 0).endVertex();
 		
 		tessellator.draw();
 	}

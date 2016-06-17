@@ -16,26 +16,22 @@ public class Path {
 	
 	private PathType type;
 	private String label;
-	private int[] x, z;
+	private int x1, z1, x2, z2;
 	private int minX=Integer.MIN_VALUE, minZ=Integer.MIN_VALUE, maxX=Integer.MAX_VALUE, maxZ=Integer.MAX_VALUE;
-	
-	//TODO make an option for the marker to disappear at a certain scale.
-	
-	public Path(int id, PathType type, String label, int dimension, int[] x, int[] z) {
+		
+	public Path(int id, PathType type, String label, int dimension, int x1, int z1, int x2, int z2) {
 		this.id = id;
 		this.type = type;
 		this.label = label == null ? "" : label;
 		this.dim = dimension;
-		this.x = x;
-		this.z = z;
-		for (int i = 0; i < x.length; i++) {
-			minX = Math.min(minX, x[i]);
-			maxX = Math.max(maxX, x[i]);
-		}
-		for (int i = 0; i < z.length; i++) {
-			minZ = Math.min(minZ, z[i]);
-			maxZ = Math.max(maxZ, z[i]);
-		}
+		this.x1 = x1;
+		this.z1 = z1;
+		this.x2 = x2;
+		this.z2 = z2;
+		minX = Math.min(x1, x2);
+		maxX = Math.max(x1, x2);
+		minZ = Math.min(z1, z2);
+		maxZ = Math.max(z1, z2);
 	}
 	
 	public int getId() {
@@ -92,16 +88,20 @@ public class Path {
 		return maxZ;
 	}
 	
-	public int getLength() {
-		return Math.min(x.length, z.length);
+	public int getX1() {
+		return x1;
 	}
 	
-	public int[] getXs() {
-		return x;
+	public int getZ1() {
+		return z1;
 	}
 	
-	public int[] getZs() {
-		return z;
+	public int getX2() {
+		return x2;
+	}
+	
+	public int getZ2() {
+		return z2;
 	}
 	
 	@Override
@@ -113,6 +113,6 @@ public class Path {
 	
 	@Override
 	public String toString() {
-		return "#" + id + "\"" + label + "\"" + "@(" + x + ", " + z + ")";
+		return "#" + id + "\"" + label + "\"" + "@(" + x1 + ", " + z1 + ")-(" + x2 + ", " + z2 + ")";
 	}
 }

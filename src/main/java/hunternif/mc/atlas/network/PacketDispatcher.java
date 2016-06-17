@@ -12,6 +12,7 @@ import net.minecraft.entity.player.EntityPlayerMP;
 
 import hunternif.mc.atlas.AntiqueAtlasMod;
 import hunternif.mc.atlas.network.bidirectional.DeleteMarkerPacket;
+import hunternif.mc.atlas.network.bidirectional.DeletePathPacket;
 import hunternif.mc.atlas.network.bidirectional.PutBiomeTilePacket;
 import hunternif.mc.atlas.network.client.DeleteCustomGlobalTilePacket;
 import hunternif.mc.atlas.network.client.MapDataPacket;
@@ -20,6 +21,7 @@ import hunternif.mc.atlas.network.client.PathsPacket;
 import hunternif.mc.atlas.network.client.TileNameIDPacket;
 import hunternif.mc.atlas.network.client.TilesPacket;
 import hunternif.mc.atlas.network.server.AddMarkerPacket;
+import hunternif.mc.atlas.network.server.AddPathPacket;
 import hunternif.mc.atlas.network.server.BrowsingPositionPacket;
 import hunternif.mc.atlas.network.server.RegisterTileIdPacket;
 
@@ -43,6 +45,7 @@ public class PacketDispatcher
 	public static void registerPackets() {
 		// Bi-directional messages
 		registerMessage(DeleteMarkerPacket.class);
+		registerMessage(DeletePathPacket.class);
 		registerMessage(PutBiomeTilePacket.class);
 
 		// Messages sent to CLIENT
@@ -55,6 +58,7 @@ public class PacketDispatcher
 
 		// Messages sent to SERVER
 		registerMessage(AddMarkerPacket.class);
+		registerMessage(AddPathPacket.class);
 		registerMessage(RegisterTileIdPacket.class);
 		registerMessage(BrowsingPositionPacket.class);
 	}

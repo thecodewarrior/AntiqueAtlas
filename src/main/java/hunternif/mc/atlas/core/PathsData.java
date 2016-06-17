@@ -31,8 +31,10 @@ public class PathsData extends WorldSavedData {
 	private static final String TAG_PATH_ID = "id";
 	private static final String TAG_PATH_TYPE = "pathType";
 	private static final String TAG_PATH_LABEL = "label";
-	private static final String TAG_PATH_X = "x";
-	private static final String TAG_PATH_Y = "y";
+	private static final String TAG_PATH_X_1 = "x1";
+	private static final String TAG_PATH_Z_1 = "z1";
+	private static final String TAG_PATH_X_2 = "x2";
+	private static final String TAG_PATH_Z_2 = "z2";
 	
 	/** Markers are stored in lists within square areas this many MC chunks
 	 * across. */
@@ -86,12 +88,12 @@ public class PathsData extends WorldSavedData {
 						PathRegistry.find(pathTag.getString(TAG_PATH_TYPE)),
 						pathTag.getString(TAG_PATH_LABEL),
 						dimensionID,
-						pathTag.getIntArray(TAG_PATH_X),
-						pathTag.getIntArray(TAG_PATH_Y));
+						pathTag.getInteger(TAG_PATH_X_1),
+						pathTag.getInteger(TAG_PATH_Z_1),
+						pathTag.getInteger(TAG_PATH_X_2),
+						pathTag.getInteger(TAG_PATH_Z_2));
 				loadPath(path);
 			}
-			Path apath = new Path(1000, PathTypes.DOTS, "ASDF", dimensionID, new int[] { 0, 10, 10, 0 }, new int[] { 0, 10, 20, 20 });
-			loadPath(apath);
 		}
 	}
 
@@ -111,8 +113,10 @@ public class PathsData extends WorldSavedData {
 				pathTag.setInteger(TAG_PATH_ID, path.getId());
 				pathTag.setString(TAG_PATH_TYPE, path.getType().getRegistryName().toString());
 				pathTag.setString(TAG_PATH_LABEL, path.getLabel());
-				pathTag.setIntArray(TAG_PATH_X, path.getXs());
-				pathTag.setIntArray(TAG_PATH_Y, path.getZs());
+				pathTag.setInteger(TAG_PATH_X_1, path.getX1());
+				pathTag.setInteger(TAG_PATH_Z_1, path.getZ1());
+				pathTag.setInteger(TAG_PATH_X_2, path.getX2());
+				pathTag.setInteger(TAG_PATH_Z_2, path.getZ2());
 				tagList.appendTag(pathTag);
 			}
 			tag.setTag(TAG_PATHS, tagList);
@@ -158,8 +162,8 @@ public class PathsData extends WorldSavedData {
 	/** For internal use. Use the {@link PathAPI} to put paths! This method
 	 * creates a new path from the given data, saves and returns it.
 	 * Server side only! */
-	public Path createAndSaveMarker(PathType type, String label, int dimension, int[] x, int[] z, boolean visibleAhead) {
-		Path path = new Path(getNewID(), type, label, dimension, x, z);
+	public Path createAndSavePath(PathType type, String label, int dimension, int x1, int z1, int x2, int z2) {
+		Path path = new Path(getNewID(), type, label, dimension, x1, z1, x2, z2);
 		Log.info("Created new path %s", path.toString());
 		idMap.put(path.getId(), path);
 		getPathsDataInDimension(path.getDimension()).insertPath(path);

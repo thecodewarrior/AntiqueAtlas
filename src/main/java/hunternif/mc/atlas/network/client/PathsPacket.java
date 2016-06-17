@@ -65,7 +65,7 @@ public class PathsPacket extends AbstractClientMessage<PathsPacket> {
 				Path marker = new Path(buffer.readVarIntFromBuffer(),
 						type, ByteBufUtils.readUTF8String(buffer),
 						dimension,
-						buffer.readVarIntArray(), buffer.readVarIntArray());
+						buffer.readInt(), buffer.readInt(), buffer.readInt(), buffer.readInt());
 				pathsByType.put(type, marker);
 			}
 		}
@@ -84,8 +84,10 @@ public class PathsPacket extends AbstractClientMessage<PathsPacket> {
 			for (Path path : paths) {
 				buffer.writeVarIntToBuffer(path.getId());
 				ByteBufUtils.writeUTF8String(buffer, path.getLabel());
-				buffer.writeVarIntArray(path.getXs());
-				buffer.writeVarIntArray(path.getZs());
+				buffer.writeInt(path.getX1());
+				buffer.writeInt(path.getZ1());
+				buffer.writeInt(path.getX2());
+				buffer.writeInt(path.getZ2());
 			}
 		}
 	}

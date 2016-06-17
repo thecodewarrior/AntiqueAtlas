@@ -11,7 +11,7 @@ import hunternif.mc.atlas.util.SaveData;
 public class PathRegistry extends SaveData {
 	public static PathRegistry INSTANCE = new PathRegistry();
 
-	private final ResourceLocation DEFAULT_LOC = new ResourceLocation("antiqueatlas:dotted_small");
+	private final ResourceLocation DEFAULT_LOC = new ResourceLocation("antiqueatlas:dots");
 	
 	private final MarkerRegistryImpl<PathType> registry;
 	

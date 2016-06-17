@@ -36,6 +36,7 @@ import hunternif.mc.atlas.marker.NetherPortalWatcher;
 import hunternif.mc.atlas.network.PacketDispatcher;
 import hunternif.mc.atlas.registry.MarkerRegistry;
 import hunternif.mc.atlas.registry.MarkerTypes;
+import hunternif.mc.atlas.registry.PathTypes;
 import hunternif.mc.atlas.util.Log;
 
 @Mod(modid=AntiqueAtlasMod.ID, name=AntiqueAtlasMod.NAME, version=AntiqueAtlasMod.VERSION)
@@ -68,6 +69,7 @@ public class AntiqueAtlasMod {
 		Log.setModID(ID);
 		MarkerRegistry.INSTANCE.getClass(); // load the class
 		MarkerTypes.INSTANCE.getClass(); // ...
+		PathTypes.instance.getClass(); // ...
 		proxy.preInit(event);
 		settings.load(new File(proxy.configDir, "settings.cfg"));
 		
