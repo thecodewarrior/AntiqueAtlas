@@ -16,6 +16,7 @@ import hunternif.mc.atlas.network.bidirectional.PutBiomeTilePacket;
 import hunternif.mc.atlas.network.client.DeleteCustomGlobalTilePacket;
 import hunternif.mc.atlas.network.client.MapDataPacket;
 import hunternif.mc.atlas.network.client.MarkersPacket;
+import hunternif.mc.atlas.network.client.PathsPacket;
 import hunternif.mc.atlas.network.client.TileNameIDPacket;
 import hunternif.mc.atlas.network.client.TilesPacket;
 import hunternif.mc.atlas.network.server.AddMarkerPacket;
@@ -49,6 +50,7 @@ public class PacketDispatcher
 		registerMessage(TileNameIDPacket.class);
 		registerMessage(TilesPacket.class);
 		registerMessage(MarkersPacket.class);
+		registerMessage(PathsPacket.class);
 		registerMessage(DeleteCustomGlobalTilePacket.class);
 
 		// Messages sent to SERVER

@@ -1,7 +1,26 @@
 package hunternif.mc.atlas;
 
 import static net.minecraftforge.oredict.RecipeSorter.Category.SHAPELESS;
+
+import java.io.File;
+
+import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.common.Mod.EventHandler;
+import net.minecraftforge.fml.common.Mod.Instance;
+import net.minecraftforge.fml.common.SidedProxy;
+import net.minecraftforge.fml.common.event.FMLInitializationEvent;
+import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
+import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
+import net.minecraftforge.fml.common.registry.GameRegistry;
+import net.minecraftforge.oredict.RecipeSorter;
+
+import net.minecraft.creativetab.CreativeTabs;
+import net.minecraft.init.Items;
+import net.minecraft.item.ItemStack;
+
 import hunternif.mc.atlas.core.AtlasDataHandler;
+import hunternif.mc.atlas.core.PathsDataHandler;
 import hunternif.mc.atlas.ext.DeathWatcher;
 import hunternif.mc.atlas.ext.ExtBiomeDataHandler;
 import hunternif.mc.atlas.ext.NetherFortressWatcher;
@@ -18,22 +37,6 @@ import hunternif.mc.atlas.network.PacketDispatcher;
 import hunternif.mc.atlas.registry.MarkerRegistry;
 import hunternif.mc.atlas.registry.MarkerTypes;
 import hunternif.mc.atlas.util.Log;
-
-import java.io.File;
-
-import net.minecraft.creativetab.CreativeTabs;
-import net.minecraft.init.Items;
-import net.minecraft.item.ItemStack;
-import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.common.Mod.EventHandler;
-import net.minecraftforge.fml.common.Mod.Instance;
-import net.minecraftforge.fml.common.SidedProxy;
-import net.minecraftforge.fml.common.event.FMLInitializationEvent;
-import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
-import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
-import net.minecraftforge.fml.common.registry.GameRegistry;
-import net.minecraftforge.oredict.RecipeSorter;
 
 @Mod(modid=AntiqueAtlasMod.ID, name=AntiqueAtlasMod.NAME, version=AntiqueAtlasMod.VERSION)
 public class AntiqueAtlasMod {
@@ -52,6 +55,7 @@ public class AntiqueAtlasMod {
 	
 	public static final AtlasDataHandler atlasData = new AtlasDataHandler();
 	public static final MarkersDataHandler markersData = new MarkersDataHandler();
+	public static final PathsDataHandler pathsData = new PathsDataHandler();
 	
 	public static final ExtBiomeDataHandler extBiomeData = new ExtBiomeDataHandler();
 	public static final GlobalMarkersDataHandler globalMarkersData = new GlobalMarkersDataHandler();
@@ -93,6 +97,7 @@ public class AntiqueAtlasMod {
 		
 		MinecraftForge.EVENT_BUS.register(atlasData);
 		MinecraftForge.EVENT_BUS.register(markersData);
+		MinecraftForge.EVENT_BUS.register(pathsData);
 		
 		MinecraftForge.EVENT_BUS.register(extBiomeData);
 		

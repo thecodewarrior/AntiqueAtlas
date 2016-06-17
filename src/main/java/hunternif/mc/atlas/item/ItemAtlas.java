@@ -22,6 +22,7 @@ import hunternif.mc.atlas.core.BiomeDetectorEnd;
 import hunternif.mc.atlas.core.BiomeDetectorNether;
 import hunternif.mc.atlas.core.IBiomeDetector;
 import hunternif.mc.atlas.core.ITileStorage;
+import hunternif.mc.atlas.core.PathsData;
 import hunternif.mc.atlas.core.Tile;
 import hunternif.mc.atlas.marker.MarkersData;
 
@@ -83,6 +84,13 @@ public class ItemAtlas extends Item {
 		MarkersData markers = AntiqueAtlasMod.markersData.getMarkersData(stack, world);
 		if (!world.isRemote && !markers.isSyncedOnPlayer(player) && !markers.isEmpty()) {
 			markers.syncOnPlayer(stack.getItemDamage(), player);
+		}
+		markers = null;
+		
+		// Same thing with the paths:
+		PathsData paths = AntiqueAtlasMod.pathsData.getPathsData(stack, world);
+		if (!world.isRemote && !paths.isSyncedOnPlayer(player) && !paths.isEmpty()) {
+			paths.syncOnPlayer(stack.getItemDamage(), player);
 		}
 		markers = null;
 		

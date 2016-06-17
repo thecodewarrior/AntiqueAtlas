@@ -1,5 +1,6 @@
 package hunternif.mc.atlas.client.gui;
 
+import java.awt.Rectangle;
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
@@ -16,6 +17,7 @@ import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.math.Vec3d;
 
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
@@ -36,6 +38,9 @@ import hunternif.mc.atlas.client.gui.core.GuiStates.IState;
 import hunternif.mc.atlas.client.gui.core.GuiStates.SimpleState;
 import hunternif.mc.atlas.client.gui.core.IButtonListener;
 import hunternif.mc.atlas.core.DimensionData;
+import hunternif.mc.atlas.core.DimensionPathsData;
+import hunternif.mc.atlas.core.Path;
+import hunternif.mc.atlas.core.PathsData;
 import hunternif.mc.atlas.marker.DimensionMarkersData;
 import hunternif.mc.atlas.marker.Marker;
 import hunternif.mc.atlas.marker.MarkersData;
@@ -43,6 +48,7 @@ import hunternif.mc.atlas.network.PacketDispatcher;
 import hunternif.mc.atlas.network.server.BrowsingPositionPacket;
 import hunternif.mc.atlas.registry.MarkerRenderInfo;
 import hunternif.mc.atlas.registry.MarkerType;
+import hunternif.mc.atlas.registry.PathTypes;
 import hunternif.mc.atlas.util.AtlasRenderHelper;
 import hunternif.mc.atlas.util.ExportImageUtil;
 import hunternif.mc.atlas.util.Log;
@@ -225,6 +231,9 @@ public class GuiAtlas extends GuiComponent {
 	
 	/** Progress bar for exporting images. */
 	private ProgressBarOverlay progressBar = new ProgressBarOverlay(100, 2);
+	
+	/** Local paths in the current dimension */
+	private DimensionPathsData localPathsData;
 	
 	private int scaleAlpha = 255;
 	private long lastUpdateMillis = System.currentTimeMillis();
@@ -549,6 +558,14 @@ public class GuiAtlas extends GuiComponent {
 		} else {
 			localMarkersData = null;
 		}
+		PathsData pathsData = AntiqueAtlasMod.pathsData
+				.getPathsData(stack, player.worldObj);
+		if (pathsData != null) {
+			localPathsData = pathsData
+					.getPathsDataInDimension(player.dimension);
+		} else {
+			localPathsData = null;
+		}
 	}
 	
 	/** Offset the map view depending on which button was pressed. */
@@ -666,6 +683,16 @@ public class GuiAtlas extends GuiComponent {
 		int markersEndZ = MathUtil.roundToBase(mapEndZ, MarkersData.CHUNK_STEP) / MarkersData.CHUNK_STEP + 1;
 		double iconScale = getIconScale();
 		
+		Rectangle mapRect = new Rectangle(mapStartX, mapStartZ, mapEndX, mapEndZ);
+		
+		for (Path path : localPathsData.getAllPaths()) {			
+			if(mapRect.intersects(new Rectangle(path.getMinX(), path.getMinZ(), path.getMaxX(), path.getMaxZ()))) {
+				renderPath(path);
+			}
+		}
+		
+		renderPath(new Path(1000, PathTypes.DOTS, "ASDF", 0, new int[] { 0, 10, 12, -30 }, new int[] { 0, 10, 23, 32 }));
+		
 		// Draw global markers:
 		for (int x = markersStartX; x <= markersEndX; x++) {
 			for (int z = markersStartZ; z <= markersEndZ; z++) {
@@ -743,6 +770,38 @@ public class GuiAtlas extends GuiComponent {
 			drawDefaultBackground();
 			progressBar.draw((width - 100)/2, height/2 - 34);
 		}
+	}
+	
+	private void renderPath(Path path) {
+		Tessellator tessellator = Tessellator.getInstance();
+		VertexBuffer vb = tessellator.getBuffer();
+		GlStateManager.glLineWidth((int)( 4*mapScale ));
+		Minecraft.getMinecraft().renderEngine.bindTexture(path.getType().getTexture());
+		vb.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX);
+		double u = 0;
+		for (int i = 0; i+1 < path.getLength(); i ++) {
+			int wX = path.getXs()[i], wZ = path.getZs()[i];
+			int wX2 = path.getXs()[i+1], wZ2 = path.getZs()[i+1];
+			
+			Vec3d p1 = new Vec3d(worldXToScreenX(wX), worldZToScreenY(wZ), 0);
+			Vec3d p2 = new Vec3d(worldXToScreenX(wX2), worldZToScreenY(wZ2), 0);
+			
+			Vec3d dir = p2.subtract(p1);
+			Vec3d perp = new Vec3d(dir.yCoord, -dir.xCoord, dir.zCoord).normalize().scale(1);
+			
+			
+			
+			vb.pos(p1.xCoord+perp.xCoord, p1.yCoord+perp.yCoord, 0).tex(u, 0).endVertex();
+			vb.pos(p1.xCoord-perp.xCoord, p1.yCoord-perp.yCoord, 0).tex(u, 1).endVertex();
+			
+			double distance = dir.lengthVector();
+			u += distance * 0.1;
+			
+			vb.pos(p2.xCoord-perp.xCoord, p2.yCoord-perp.yCoord, 0).tex(u, 1).endVertex();
+			vb.pos(p2.xCoord+perp.xCoord, p2.yCoord+perp.yCoord, 0).tex(u, 0).endVertex();
+		}
+		
+		tessellator.draw();
 	}
 	
 	private void renderScaleOverlay(long deltaMillis) {

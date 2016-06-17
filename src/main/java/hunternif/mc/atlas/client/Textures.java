@@ -9,6 +9,7 @@ public class Textures {
 	public static final String GUI_ICONS = GUI + "icons/";
 	public static final String GUI_TILES = GUI + "tiles/";
 	public static final String GUI_MARKERS = GUI + "markers/";
+	public static final String GUI_PATHS = GUI + "paths/";
 	public static final String GUI_SCALEBAR = GUI + "scalebar/";
 	
 	public static final ResourceLocation
@@ -245,7 +246,9 @@ public class Textures {
 	TILE_NETHER_WALL = tile("nether_wall.png"),
 	TILE_NETHER_HALL = tile("nether_hall.png"),
 	TILE_NETHER_FORT_STAIRS = tile("nether_fort_stairs.png"),
-	TILE_NETHER_THRONE = tile("nether_throne.png");
+	TILE_NETHER_THRONE = tile("nether_throne.png"),
+	
+	PATH_DOTS = path("dots.png");
 	
 	// Constructor helpers:
 	public static final ResourceLocation gui(String fileName) {
@@ -262,5 +265,8 @@ public class Textures {
 	}
 	public static final ResourceLocation icon(String fileName) {
 		return new ResourceLocation(GUI_ICONS + fileName);
+	}
+	public static final ResourceLocation path(String fileName) {
+		return new ResourceLocation(GUI_PATHS + fileName);
 	}
 }
