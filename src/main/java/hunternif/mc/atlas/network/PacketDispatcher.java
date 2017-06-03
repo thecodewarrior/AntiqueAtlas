@@ -7,6 +7,7 @@ import hunternif.mc.atlas.network.client.*;
 import hunternif.mc.atlas.network.server.AddMarkerPacket;
 import hunternif.mc.atlas.network.server.BrowsingPositionPacket;
 import hunternif.mc.atlas.network.server.RegisterTileIdPacket;
+import hunternif.mc.atlas.network.server.SetMarkupPacket;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
@@ -43,9 +44,11 @@ public class PacketDispatcher
 		registerMessage(TileNameIDPacket.class);
 		registerMessage(TilesPacket.class);
 		registerMessage(MarkersPacket.class);
+		registerMessage(MarkupPacket.class);
 		registerMessage(DeleteCustomGlobalTilePacket.class);
 
 		// Messages sent to SERVER
+		registerMessage(SetMarkupPacket.class);
 		registerMessage(AddMarkerPacket.class);
 		registerMessage(RegisterTileIdPacket.class);
 		registerMessage(BrowsingPositionPacket.class);

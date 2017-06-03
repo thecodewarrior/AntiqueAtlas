@@ -3,6 +3,7 @@ package hunternif.mc.atlas.item;
 import hunternif.mc.atlas.AntiqueAtlasMod;
 import hunternif.mc.atlas.core.AtlasData;
 import hunternif.mc.atlas.marker.MarkersData;
+import hunternif.mc.atlas.markup.MarkupData;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
@@ -51,6 +52,12 @@ public class ItemAtlas extends Item {
 		MarkersData markers = AntiqueAtlasMod.markersData.getMarkersData(stack, world);
 		if (!world.isRemote && !markers.isSyncedOnPlayer(player) && !markers.isEmpty()) {
 			markers.syncOnPlayer(stack.getItemDamage(), player);
+		}
+		
+		// Same thing with the local markers:
+		MarkupData markup = AntiqueAtlasMod.markupData.getMarkupData(stack, world);
+		if (!world.isRemote && !markup.isSyncedOnPlayer(player)) {
+			markup.syncOnPlayer(stack.getItemDamage(), player);
 		}
 
 		// Updating map around player

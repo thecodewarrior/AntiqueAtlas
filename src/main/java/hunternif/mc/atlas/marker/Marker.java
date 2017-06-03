@@ -5,11 +5,11 @@ import hunternif.mc.atlas.util.ShortVec2;
 import net.minecraft.client.resources.I18n;
 
 /**
- * Marker on the map in an atlas. Has a type and a text label.
+ * Markup on the map in an atlas. Has a type and a text label.
  * @author Hunternif
  */
 public class Marker {
-	/** Id is unique only within a MarkersData instance, i.e. within one atlas
+	/** Id is unique only within a MarkupData instance, i.e. within one atlas
 	 * or among global markers in a world. */
 	private final int id;
 	private final MarkerType type;

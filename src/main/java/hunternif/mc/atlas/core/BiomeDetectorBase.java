@@ -68,6 +68,7 @@ public class BiomeDetectorBase implements IBiomeDetector {
 
 		int[] chunkBiomes = ByteUtil.unsignedByteToIntArray(chunk.getBiomeArray());
 		Map<Integer, Integer> biomeOccurrences = new HashMap<>(biomeCount);
+		biomeOccurrences.put(127 /* the void */, 0);
 
 		// The following important pseudo-biomes don't have IDs:
 		int lavaOccurrences = 0;

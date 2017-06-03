@@ -118,7 +118,7 @@ public class ExportImageUtil {
 			bg = ImageIO.read(is);
 			is.close();
 			
-			// Biome & Marker textures:
+			// Biome & Markup textures:
 			List<ResourceLocation> allTextures = new ArrayList<>(64);
 			allTextures.addAll(BiomeTextureMap.instance().getAllTextures());
 			if (showMarkers) {
@@ -188,7 +188,7 @@ public class ExportImageUtil {
 			bg = ImageIO.read(is);
 			is.close();
 			
-			// Biome & Marker textures:
+			// Biome & Markup textures:
 			List<ResourceLocation> allTextures = new ArrayList<>(64);
 			allTextures.addAll(BiomeTextureMap.instance().getAllTextures());
 			if (showMarkers) {

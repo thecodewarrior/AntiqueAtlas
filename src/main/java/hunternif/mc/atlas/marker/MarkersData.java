@@ -20,7 +20,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 /**
  * Contains markers, mapped to dimensions, and then to their chunk coordinates.
  * <p>
- * On the server a separate instance of MarkersData contains all the global
+ * On the server a separate instance of MarkupData contains all the global
  * markers, which are also copied to atlases, but not saved with them.
  * At runtime clients have both types of markers in the same collection..
  * </p>
@@ -87,7 +87,7 @@ public class MarkersData extends WorldSavedData {
 				NBTTagCompound markerTag = tagList.getCompoundTagAt(i);
 				boolean visibleAhead = true;
 				if (version < 2) {
-					Log.warn("Marker is visible ahead by default");
+					Log.warn("Markup is visible ahead by default");
 				} else {
 					visibleAhead = markerTag.getBoolean(TAG_MARKER_VISIBLE_AHEAD);
 				}
@@ -225,7 +225,7 @@ public class MarkersData extends WorldSavedData {
 		playersSentTo.add(player);
 	}
 	
-	/** To be overridden in GlobalMarkersData. */
+	/** To be overridden in GlobalMarkupData. */
 	MarkersPacket newMarkersPacket(int atlasID, int dimension) {
 		return new MarkersPacket(atlasID, dimension);
 	}

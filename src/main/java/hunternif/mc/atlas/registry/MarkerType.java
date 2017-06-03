@@ -174,7 +174,7 @@ public class MarkerType extends IRegistryEntry.Impl {
 		for (int i = 0; i < icons.length; i++) {
 			iconSizes[i] = -1;
 			if (icons[i] == null) {
-				Log.warn("Marker %s -- Texture location is null at index %d!", getRegistryName().toString(), i);
+				Log.warn("Markup %s -- Texture location is null at index %d!", getRegistryName().toString(), i);
 			}
 			IResource iresource = null;
 
@@ -210,7 +210,7 @@ public class MarkerType extends IRegistryEntry.Impl {
 				iconPixels[i] = matrix;
 				
 			} catch (IOException e) {
-				Log.warn(e, "Marker %s -- Error getting texture size data for index %d - %s",
+				Log.warn(e, "Markup %s -- Error getting texture size data for index %d - %s",
 						getRegistryName().toString(), i, icons[i].toString());
 			} finally {
 				IOUtils.closeQuietly(iresource);

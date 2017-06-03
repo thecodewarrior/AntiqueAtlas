@@ -10,8 +10,13 @@ import hunternif.mc.atlas.core.DimensionData;
 import hunternif.mc.atlas.marker.DimensionMarkersData;
 import hunternif.mc.atlas.marker.Marker;
 import hunternif.mc.atlas.marker.MarkersData;
+import hunternif.mc.atlas.markup.DimensionMarkupData;
+import hunternif.mc.atlas.markup.EnumMarkupColor;
+import hunternif.mc.atlas.markup.Markup;
+import hunternif.mc.atlas.markup.MarkupData;
 import hunternif.mc.atlas.network.PacketDispatcher;
 import hunternif.mc.atlas.network.server.BrowsingPositionPacket;
+import hunternif.mc.atlas.network.server.SetMarkupPacket;
 import hunternif.mc.atlas.registry.MarkerRenderInfo;
 import hunternif.mc.atlas.registry.MarkerType;
 import hunternif.mc.atlas.util.*;
@@ -121,6 +126,17 @@ public class GuiAtlas extends GuiComponent {
 			btnExportPng.setSelected(false);
 		}
 	};
+	
+	private final IState DRAWING = new IState() {
+		@Override
+		public void onEnterState() {
+			btnDrawing.setSelected(true);
+		}
+		@Override
+		public void onExitState() {
+			btnDrawing.setSelected(false);
+		}
+	};
 
 	// Buttons =================================================================
 
@@ -141,7 +157,9 @@ public class GuiAtlas extends GuiComponent {
 
 	/** Button for restoring player's position at the center of the Atlas. */
 	private final GuiPositionButton btnPosition;
-
+	
+	/** Button for drawing (pencil mode) */
+	private final GuiBookmarkButton btnDrawing;
 
 	// Navigation ==============================================================
 
@@ -196,6 +214,11 @@ public class GuiAtlas extends GuiComponent {
 	/** The marker highlighted by the eraser. Even though multiple markers may
 	 * be highlighted at the same time, only one of them will be deleted. */
 	private Marker toDelete;
+	
+	/** Local markers in the current dimension */
+	private DimensionMarkupData localMarkupData;
+	/** Global markers in the current dimension */
+	private DimensionMarkupData globalMarkupData;
 	
 	private final GuiMarkerFinalizer markerFinalizer = new GuiMarkerFinalizer();
 	/** Displayed where the marker is about to be placed when the Finalizer GUI is on. */
@@ -305,7 +328,22 @@ public class GuiAtlas extends GuiComponent {
                 state.switchTo(state.is(HIDING_MARKERS) ? NORMAL : HIDING_MARKERS);
             }
         });
-
+		
+		
+		btnDrawing = new GuiBookmarkButton(1, Textures.ICON_EXPORT, I18n.format("gui.antiqueatlas.beginDrawing"));
+		addChild(btnDrawing).offsetGuiCoords(300, 98);
+		btnDrawing.addListener(button -> {
+			if (stack != null || !AntiqueAtlasMod.settings.itemNeeded) {
+				if (state.is(DRAWING)) {
+					selectedButton = null;
+					state.switchTo(NORMAL);
+				} else {
+					selectedButton = button;
+					state.switchTo(DRAWING);
+				}
+			}
+		});
+		
 		addChild(scaleBar).offsetGuiCoords(20, 198);
 		scaleBar.setMapScale(1);
 
@@ -362,7 +400,7 @@ public class GuiAtlas extends GuiComponent {
 		int mapY = (height - MAP_HEIGHT)/2;
 		boolean isMouseOverMap = mouseX >= mapX && mouseX <= mapX + MAP_WIDTH &&
 				mouseY >= mapY && mouseY <= mapY + MAP_HEIGHT;
-		if (!state.is(NORMAL) && !state.is(HIDING_MARKERS)) {
+		if (!state.is(NORMAL) && !state.is(HIDING_MARKERS) && !state.is(DRAWING)) {
             int atlasID = getAtlasID();
 
 			if (state.is(PLACING_MARKER) // If clicked on the map, place marker:
@@ -508,10 +546,19 @@ public class GuiAtlas extends GuiComponent {
 	protected void mouseClickMove(int mouseX, int mouseY, int lastMouseButton, long timeSinceMouseClick) {
 		super.mouseClickMove(mouseX, mouseY, lastMouseButton, timeSinceMouseClick);
 		if (isDragging) {
-			followPlayer = false;
-			btnPosition.setEnabled(true);
-			mapOffsetX = dragMapOffsetX + mouseX - dragMouseX;
-			mapOffsetY = dragMapOffsetY + mouseY - dragMouseY;
+			if(state.is(DRAWING)) {
+				int x = screenXToWorldX(mouseX), z = screenYToWorldZ(mouseY);
+				Markup markup = globalMarkupData.getMarkupAtChunk(x / 16, z / 16);
+				if(markup == null || markup.getColor(x & 0x0F, z & 0x0F) != EnumMarkupColor.RED) {
+					SetMarkupPacket packet = new SetMarkupPacket(getAtlasID(), player.dimension, EnumMarkupColor.RED, x, z);
+					PacketDispatcher.sendToServer(packet);
+				}
+			} else {
+				followPlayer = false;
+				btnPosition.setEnabled(true);
+				mapOffsetX = dragMapOffsetX + mouseX - dragMouseX;
+				mapOffsetY = dragMapOffsetY + mouseY - dragMouseY;
+			}
 		}
 	}
 
@@ -548,6 +595,14 @@ public class GuiAtlas extends GuiComponent {
 		} else {
 			localMarkersData = null;
 		}
+		MarkupData markupData = AntiqueAtlasMod.markupData.getMarkupData(atlasID, player.getEntityWorld());
+		if (markupData != null) {
+			localMarkupData = markupData
+				.getMarkupDataInDimension(player.dimension);
+		} else {
+			localMarkupData = null;
+		}
+		globalMarkupData = AntiqueAtlasMod.globalMarkupData.getData().getMarkupDataInDimension(player.dimension);
 	}
 
 	/** Offset the map view depending on which button was pressed. */
@@ -672,13 +727,51 @@ public class GuiAtlas extends GuiComponent {
 						subtile.getTextureU(), subtile.getTextureV(), tileHalfSize);
 			}
 		}
-
+		
+		
+		int markupMinChunkX = -20;
+		int markupMinChunkZ = -20;
+		
+		int markupMaxChunkX = 20;
+		int markupMaxChunkZ = 20;
+		
+		Tessellator tess = Tessellator.getInstance();
+		VertexBuffer vb = tess.getBuffer();
+		
+		GlStateManager.disableTexture2D();
+		GL11.glPointSize((float)Math.max(2, 2*mapScale));
+		vb.begin(GL11.GL_POINTS, DefaultVertexFormats.POSITION_COLOR);
+		
+		for(int mX = markupMinChunkX; mX <= markupMaxChunkX; mX++) {
+			for(int mZ = markupMinChunkZ; mZ <= markupMaxChunkZ; mZ++) {
+				Markup localChunk = localMarkupData.getMarkupAtChunk(mX, mZ);
+				final int _mX = mX, _mZ = mZ;
+				if(localChunk != null) {
+					localChunk.forEach((k, v) -> {
+						int chunkX = (k & 0xF0) >>> 4;
+						int chunkZ = (k & 0x0F);
+						int x = (_mX * 16) + chunkX;
+						int z = (_mZ * 16) + chunkZ;
+						vb.pos(worldXToScreenX(x+1) + 0.5 * mapScale, worldZToScreenY(z+1) + 0.5 * mapScale, 0).color(v.r2, v.g2, v.b2, 255).endVertex();
+						vb.pos(worldXToScreenX(x) + 0.5 * mapScale, worldZToScreenY(z) + 0.5 * mapScale, 0.1).color(v.r, v.g, v.b, 255).endVertex();
+						return true;
+					});
+				}
+			}
+		}
+//		vb.pos(worldXToScreenX(-10) + 0.5 * mapScale, worldZToScreenY(-10) + 0.5 * mapScale, 0).color(255, 0, 255, 255).endVertex();
+		
+		tess.draw();
+		GlStateManager.enableTexture2D();
+		
 		int markersStartX = MathUtil.roundToBase(mapStartX, MarkersData.CHUNK_STEP) / MarkersData.CHUNK_STEP - 1;
 		int markersStartZ = MathUtil.roundToBase(mapStartZ, MarkersData.CHUNK_STEP) / MarkersData.CHUNK_STEP - 1;
 		int markersEndX = MathUtil.roundToBase(mapEndX, MarkersData.CHUNK_STEP) / MarkersData.CHUNK_STEP + 1;
 		int markersEndZ = MathUtil.roundToBase(mapEndZ, MarkersData.CHUNK_STEP) / MarkersData.CHUNK_STEP + 1;
 		double iconScale = getIconScale();
-
+		
+		
+		
 		// Draw global markers:
 		for (int x = markersStartX; x <= markersEndX; x++) {
 			for (int z = markersStartZ; z <= markersEndZ; z++) {
@@ -858,7 +951,7 @@ public class GuiAtlas extends GuiComponent {
 		}
 
 		if (AntiqueAtlasMod.settings.debugRender){
-			System.out.println("Rendering Marker: "+info.tex);
+			System.out.println("Rendering Markup: "+info.tex);
 		}
 
 		AtlasRenderHelper.drawFullTexture(

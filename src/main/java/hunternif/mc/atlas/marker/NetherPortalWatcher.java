@@ -118,7 +118,7 @@ public class NetherPortalWatcher extends DummyWorldAccess {
 			}
 		}
 
-		// Marker not found, place new one:
+		// Markup not found, place new one:
 		AtlasAPI.markers.putMarker(world, false, atlasID, MarkerTypes.NETHER_PORTAL, "gui.antiqueatlas.marker.netherPortal", x, z);
 	}
 	

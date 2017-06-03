@@ -2,6 +2,7 @@ package hunternif.mc.atlas.core;
 
 import hunternif.mc.atlas.AntiqueAtlasMod;
 import hunternif.mc.atlas.marker.MarkersData;
+import hunternif.mc.atlas.markup.MarkupData;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
@@ -26,6 +27,10 @@ public class PlayerEventHandler {
         if (!markers.isEmpty()) {
             markers.syncOnPlayer(atlasID, player);
         }
+        
+        // Same thing with the local markers:
+        MarkupData markup = AntiqueAtlasMod.markupData.getMarkupData(atlasID, world);
+        markup.syncOnPlayer(atlasID, player);
     }
 
     @SubscribeEvent
